@@ -1,248 +1,270 @@
 package com.focusmate.ui.screens
 
+import android.app.DatePickerDialog
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.FractionalThreshold
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.focusmate.data.model.Habit
-import java.util.UUID
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HabitsScreen(navController: NavHostController) {
     var showDialog by remember { mutableStateOf(false) }
-    var habits by remember { mutableStateOf(listOf<Habit>()) }
-    var selectedTab by remember { mutableStateOf("Hoy") }
+    var habitToEdit by remember { mutableStateOf<Habit?>(null) }
+    var selectedFrequency by remember { mutableStateOf("Hoy") }
 
     Scaffold(
-        content = { innerPadding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-            ) {
-                Text("Hábitos", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(16.dp))
-                Row(
-                    horizontalArrangement = Arrangement.SpaceAround,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = "Hoy",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
-                        color = if (selectedTab == "Hoy") Color.White else Color.Gray,
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .clickable { selectedTab = "Hoy" }
-                    )
-                    Text(
-                        text = "Semanal",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
-                        color = if (selectedTab == "Semanal") Color.White else Color.Gray,
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .clickable { selectedTab = "Semanal" }
-                    )
-                    Text(
-                        text = "General",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
-                        color = if (selectedTab == "General") Color.White else Color.Gray,
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .clickable { selectedTab = "General" }
-                    )
-                }
-
-                Box(modifier = Modifier.weight(1f)) {
-                    LazyColumn(modifier = Modifier.fillMaxSize()) {
-                        items(habits) { habit ->
-                            HabitItem(
-                                habit = habit,
-                                onMarkCompleted = {
-                                    habits = habits.map {
-                                        if (it.id == habit.id) it.copy(isCompleted = true) else it
-                                    }
-                                },
-                                onMarkNotCompleted = {
-                                    habits = habits.map {
-                                        if (it.id == habit.id) it.copy(isCompleted = false) else it
-                                    }
-                                }
-                            )
-                        }
+        topBar = {
+            TopAppBar(
+                title = { Text("Hábitos") },
+                actions = {
+                    IconButton(onClick = { /* Aquí va la lógica para añadir un nuevo hábito */ }) {
+                        Icon(Icons.Default.Add, contentDescription = "Añadir Hábito")
                     }
                 }
-            }
+            )
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { showDialog = true },
+                onClick = { habitToEdit = null; showDialog = true },
                 shape = CircleShape
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Habit")
             }
         }
-    )
-
-    if (showDialog) {
-        AddHabitDialog(
-            onAddHabit = { habit ->
-                habits = habits + habit
-                showDialog = false
-            },
-            onDismiss = { showDialog = false }
+    ) { innerPadding ->
+        HabitsContent(
+            modifier = Modifier.padding(innerPadding),
+            showDialog = showDialog,
+            onDismiss = { showDialog = false },
+            onShowDialog = { showDialog = true },
+            onEditHabit = { habitToEdit = it; showDialog = true },
+            habitToEdit = habitToEdit,
+            selectedFrequency = selectedFrequency,
+            onFrequencyChange = { selectedFrequency = it }
         )
     }
 }
 
 @Composable
-fun AddHabitDialog(
+fun HabitsContent(
+    modifier: Modifier = Modifier,
+    showDialog: Boolean,
+    onDismiss: () -> Unit,
+    onShowDialog: () -> Unit,
+    onEditHabit: (Habit) -> Unit,
+    habitToEdit: Habit?,
+    selectedFrequency: String,
+    onFrequencyChange: (String) -> Unit
+) {
+    val context = LocalContext.current
+    var habits by remember { mutableStateOf(listOf<Habit>()) }
+    val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    val currentDayOfWeek = Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
+
+    Column(modifier = modifier.fillMaxSize().padding(16.dp)) {
+        Text("Frecuencia", style = MaterialTheme.typography.headlineSmall)
+
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+            listOf("Hoy", "Semanal", "General").forEach { frequency ->
+                Text(
+                    text = frequency,
+                    modifier = Modifier.clickable { onFrequencyChange(frequency) },
+                    fontWeight = if (selectedFrequency == frequency) FontWeight.Bold else FontWeight.Normal,
+                    color = if (selectedFrequency == frequency) Color.Magenta else Color.White
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        LazyColumn(modifier = Modifier.fillMaxSize()) {
+            val filteredHabits = habits.filter { habit ->
+                when (selectedFrequency) {
+                    "Hoy" -> {
+                        habit.frequency == "Diario" && habit.daysOfWeek.contains(currentDayOfWeek) ||
+                                habit.frequency == "Semanal" && habit.weeklyCount > 0
+                    }
+                    "Semanal" -> {
+                        habit.frequency == "Semanal" || habit.frequency == "Diario" && habit.daysOfWeek.any { it in 2..6 }
+                    }
+                    "General" -> true
+                    else -> false
+                }
+            }
+            items(filteredHabits) { habit ->
+                HabitItem(
+                    habit = habit,
+                    onEditHabit = onEditHabit,
+                    onCompleteHabit = {
+                        habits = habits.map {
+                            if (it.id == habit.id) it.copy(isCompleted = !it.isCompleted) else it
+                        }
+                    }
+                )
+            }
+        }
+
+        if (showDialog) {
+            AddEditHabitDialog(
+                habit = habitToEdit,
+                onAddHabit = { habit ->
+                    habits = if (habitToEdit != null) {
+                        habits.map { if (it.id == habit.id) habit else it }
+                    } else {
+                        habits + habit
+                    }
+                    onDismiss()
+                },
+                onDeleteHabit = {
+                    habits = habits.filter { it.id != habitToEdit!!.id }
+                    onDismiss()
+                },
+                onDismiss = onDismiss
+            )
+        }
+    }
+}
+
+@Composable
+fun HabitItem(
+    habit: Habit,
+    onEditHabit: (Habit) -> Unit,
+    onCompleteHabit: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            .clickable { onCompleteHabit() }, colors = CardDefaults.cardColors(
+            containerColor = if (habit.isCompleted) Color(0xFFA5D6A7) else Color.Gray
+    ) ){
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Column(modifier = Modifier.weight(1f).padding(16.dp)) {
+                Text(habit.title, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Text(
+                    if (habit.isCompleted) "Completado" else "",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = Color.White
+                )
+            }
+            IconButton(onClick = { onEditHabit(habit) }) {
+                Icon(Icons.Default.Edit, contentDescription = "Editar Hábito", tint = Color.White)
+            }
+        }
+    }
+}
+
+@Composable
+fun AddEditHabitDialog(
+    habit: Habit?,
     onAddHabit: (Habit) -> Unit,
+    onDeleteHabit: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    var title by remember { mutableStateOf("") }
-    var frequency by remember { mutableStateOf("Diario") }
-    var selectedDays by remember { mutableStateOf(listOf<Int>()) }
+    var title by remember { mutableStateOf(habit?.title ?: "") }
+    var frequency by remember { mutableStateOf(habit?.frequency ?: "Diario") }
+    var daysOfWeek by remember { mutableStateOf(habit?.daysOfWeek ?: emptyList()) }
+    var weeklyCount by remember { mutableStateOf(habit?.weeklyCount ?: 1) }
 
     AlertDialog(
-        onDismissRequest = { onDismiss() },
-        title = { Text("Agregar Hábito") },
+        onDismissRequest = onDismiss,
+        title = { Text(if (habit != null) "Editar Hábito" else "Agregar Hábito") },
         text = {
-            Column(
-                modifier = Modifier
-                    .verticalScroll(rememberScrollState())
-                    .heightIn(max = 400.dp)
-            ) {
-                TextField(
-                    value = title,
-                    onValueChange = { title = it },
-                    label = { Text("Título") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(16.dp))
+            Column {
+                if (habit != null) {
+                    IconButton(
+                        onClick = { onDeleteHabit() },
+                        modifier = Modifier.align(Alignment.End)
+                    ) {
+                        Icon(Icons.Default.Delete, contentDescription = "Eliminar Hábito", tint = Color.Red)
+                    }
+                }
+                TextField(value = title, onValueChange = { title = it }, label = { Text("Título") })
 
-                Text(text = "Frecuencia", style = MaterialTheme.typography.bodyLarge)
-                Row {
-                    listOf("Diario", "Semanal", "Mensual").forEach { freq ->
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text("Frecuencia", style = MaterialTheme.typography.bodyLarge)
+
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                    listOf("Diario", "Semanal").forEach { freq ->
                         Text(
                             text = freq,
-                            color = if (frequency == freq) MaterialTheme.colorScheme.primary else Color.Gray,
-                            modifier = Modifier
-                                .padding(8.dp)
-                                .clickable { frequency = freq },
-                            fontWeight = if (frequency == freq) FontWeight.Bold else FontWeight.Normal
+                            modifier = Modifier.clickable { frequency = freq },
+                            fontWeight = if (frequency == freq) FontWeight.Bold else FontWeight.Normal,
+                            color = if (frequency == freq) Color.Magenta else Color.White
                         )
                     }
                 }
-                Spacer(modifier = Modifier.height(16.dp))
 
-                if (frequency == "Diario") {
-                    Text(text = "Días de la semana", style = MaterialTheme.typography.bodyLarge)
-                    Row {
-                        listOf("L", "M", "X", "J", "V", "S", "D").forEachIndexed { index, day ->
-                            Text(
-                                text = day,
-                                color = if (selectedDays.contains(index + 1)) MaterialTheme.colorScheme.primary else Color.Gray,
-                                modifier = Modifier
-                                    .padding(8.dp)
-                                    .clickable {
-                                        if (selectedDays.contains(index + 1)) {
-                                            selectedDays = selectedDays - (index + 1)
+                Spacer(modifier = Modifier.height(8.dp))
+
+                when (frequency) {
+                    "Diario" -> {
+                        Text("Días de la semana", style = MaterialTheme.typography.bodyLarge)
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                            (1..7).forEach { day ->
+                                Text(
+                                    text = listOf("L", "M", "X", "J", "V", "S", "D")[day - 1],
+                                    fontWeight = if (daysOfWeek.contains(day)) FontWeight.Bold else FontWeight.Normal,
+                                    color = if (daysOfWeek.contains(day)) Color.Magenta else Color.White,
+                                    modifier = Modifier.clickable {
+                                        daysOfWeek = if (daysOfWeek.contains(day)) {
+                                            daysOfWeek - day
                                         } else {
-                                            selectedDays = selectedDays + (index + 1)
-                                        }
-                                    },
-                                fontWeight = if (selectedDays.contains(index + 1)) FontWeight.Bold else FontWeight.Normal
-                            )
-                        }
-                    }
-                } else if (frequency == "Semanal") {
-                    Text(text = "Días a la semana", style = MaterialTheme.typography.bodyLarge)
-                    Row {
-                        (1..7).forEach { day ->
-                            Text(
-                                text = day.toString(),
-                                color = if (selectedDays.contains(day)) MaterialTheme.colorScheme.primary else Color.Gray,
-                                modifier = Modifier
-                                    .padding(8.dp)
-                                    .clickable {
-                                        if (selectedDays.contains(day)) {
-                                            selectedDays = selectedDays - day
-                                        } else {
-                                            selectedDays = selectedDays + day
-                                        }
-                                    },
-                                fontWeight = if (selectedDays.contains(day)) FontWeight.Bold else FontWeight.Normal
-                            )
-                        }
-                    }
-                } else if (frequency == "Mensual") {
-                    Text(text = "Días del mes", style = MaterialTheme.typography.bodyLarge)
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(4),
-                        contentPadding = PaddingValues(8.dp),
-                        modifier = Modifier.fillMaxHeight()
-                    ) {
-                        items((1..31).toList()) { day ->
-                            Text(
-                                text = day.toString(),
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 18.sp,
-                                color = if (selectedDays.contains(day)) MaterialTheme.colorScheme.primary else Color.Gray,
-                                modifier = Modifier
-                                    .padding(8.dp)
-                                    .background(if (selectedDays.contains(day)) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else Color.Transparent)
-                                    .clickable {
-                                        if (selectedDays.contains(day)) {
-                                            selectedDays = selectedDays - day
-                                        } else {
-                                            selectedDays = selectedDays + day
+                                            daysOfWeek + day
                                         }
                                     }
-                            )
+                                )
+                            }
                         }
+                    }
+                    "Semanal" -> {
+                        Text("Número de días a la semana", style = MaterialTheme.typography.bodyLarge)
+                        Slider(
+                            value = weeklyCount.toFloat(),
+                            onValueChange = { weeklyCount = it.toInt() },
+                            valueRange = 1f..7f,
+                            steps = 6
+                        )
+                        Text("$weeklyCount días a la semana", style = MaterialTheme.typography.bodyLarge)
                     }
                 }
             }
         },
         confirmButton = {
             Button(onClick = {
-                if (title.isNotEmpty()) {
-                    onAddHabit(Habit(title = title, frequency = when (frequency) {
-                        "Diario" -> 1
-                        "Semanal" -> 2
-                        "Mensual" -> 3
-                        else -> 1
-                    }, isCompleted = false))
-                    onDismiss()
-                }
+                val newHabit = Habit(
+                    id = habit?.id ?: UUID.randomUUID().hashCode(),
+                    title = title,
+                    frequency = frequency,
+                    daysOfWeek = daysOfWeek,
+                    weeklyCount = weeklyCount,
+                    isCompleted = false
+                )
+                onAddHabit(newHabit)
             }) {
-                Text("Agregar")
+                Text(if (habit != null) "Actualizar" else "Agregar")
             }
         },
         dismissButton = {
@@ -251,54 +273,4 @@ fun AddHabitDialog(
             }
         }
     )
-}
-
-@Composable
-fun HabitItem(
-    habit: Habit,
-    onMarkCompleted: () -> Unit,
-    onMarkNotCompleted: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp)
-            .clickable { /* Handle click event */ },
-        colors = CardDefaults.cardColors(
-            containerColor = if (habit.isCompleted) Color.Gray else Color(0xFF4CAF50)
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = habit.title,
-                    color = Color.White,
-                    fontSize = 18.sp
-                )
-                if (habit.isCompleted) {
-                    Text(
-                        text = "Completado",
-                        color = Color.White,
-                        fontSize = 14.sp
-                    )
-                }
-            }
-            Row {
-                IconButton(onClick = onMarkCompleted) {
-                    Icon(Icons.Default.Check, contentDescription = "Marcar como completado")
-                }
-                IconButton(onClick = onMarkNotCompleted) {
-                    Icon(Icons.Default.Clear, contentDescription = "Marcar como no completado")
-                }
-            }
-        }
-    }
 }
