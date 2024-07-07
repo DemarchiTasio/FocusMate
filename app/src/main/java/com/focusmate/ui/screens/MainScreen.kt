@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -34,7 +35,7 @@ fun MainScreen() {
                 CalendarScreen(navController)
             }
             composable(BottomNavItem.Habits.route) {
-                HabitsScreen()
+                HabitsScreen(navController)
             }
             composable(BottomNavItem.Mindfulness.route) {
                 MindfulnessScreen()
@@ -64,7 +65,7 @@ fun BottomNavigationBar(navController: NavHostController) {
         items.forEach { item ->
             BottomNavigationItem(
                 icon = { Icon(item.icon, contentDescription = item.title) },
-                label = { Text(text = item.title) },
+                label = { Text(text = item.title, fontSize = 12.sp) },
                 selected = currentRoute == item.route,
                 onClick = {
                     navController.navigate(item.route) {
