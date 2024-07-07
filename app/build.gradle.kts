@@ -71,6 +71,12 @@ dependencies {
     implementation ("org.tensorflow:tensorflow-lite:2.7.0")
     implementation ("org.tensorflow:tensorflow-lite-gpu:2.7.0")
     implementation ("com.google.mlkit:language-id:17.0.2")
+    implementation ("androidx.navigation:navigation-compose:2.4.0-alpha10")
+
+    implementation ("androidx.compose.ui:ui:1.0.5")
+    implementation ("androidx.compose.material:material:1.0.5")
+    implementation ("androidx.compose.ui:ui-tooling:1.0.5")
+    implementation ("androidx.compose.runtime:runtime-livedata:1.0.5")
 
     // Dependencias de prueba
     testImplementation(libs.junit)
