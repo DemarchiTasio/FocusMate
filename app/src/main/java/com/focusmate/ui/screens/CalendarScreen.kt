@@ -13,7 +13,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
@@ -29,6 +28,12 @@ import androidx.navigation.NavHostController
 import com.focusmate.data.model.Event
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+
+// Agregar una lista de etiquetas
+val eventTags = listOf("Trabajo", "Personal", "Salud", "Finanzas", "Estudio", "Ocio", "Otro")
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -522,6 +527,7 @@ fun EventItem(
     }
 }
 
+// Modificaciones en AddEventDialog para incluir el menú desplegable de etiquetas
 @Composable
 fun AddEventDialog(
     event: Event? = null,
@@ -532,6 +538,7 @@ fun AddEventDialog(
     var title by remember { mutableStateOf(event?.title ?: "") }
     var description by remember { mutableStateOf(event?.description ?: "") }
     var date by remember { mutableStateOf(event?.date) }
+    var selectedTag by remember { mutableStateOf(event?.tag ?: eventTags[0]) } // Etiqueta seleccionada
     val context = LocalContext.current
 
     val calendar = Calendar.getInstance()
@@ -589,6 +596,33 @@ fun AddEventDialog(
                         .height(120.dp),
                     enabled = isEditable
                 )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Menú desplegable para etiquetas
+                Text("Etiqueta", style = MaterialTheme.typography.bodyLarge)
+                var expanded by remember { mutableStateOf(false) }
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = selectedTag,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { expanded = true }
+                            .background(MaterialTheme.colorScheme.surface)
+                            .padding(16.dp)
+                    )
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        eventTags.forEach { tag ->
+                            DropdownMenuItem(onClick = {
+                                    selectedTag = tag
+                                    expanded = false
+                                },
+                                text = { Text(text = tag) })
+                        }
+                    }
+                }
             }
         },
         confirmButton = {
@@ -597,7 +631,8 @@ fun AddEventDialog(
                     id = event?.id ?: UUID.randomUUID().hashCode(),
                     title = title,
                     description = description,
-                    date = date
+                    date = date,
+                    tag = selectedTag // Guardar la etiqueta seleccionada
                 )
                 onAddEvent(newEvent)
             }, enabled = isEditable) {

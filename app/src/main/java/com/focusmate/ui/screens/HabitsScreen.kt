@@ -1,6 +1,7 @@
 package com.focusmate.ui.screens
 
-import android.app.DatePickerDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -25,6 +26,9 @@ import com.focusmate.data.model.Habit
 import java.text.SimpleDateFormat
 import java.util.*
 
+val habitTags = listOf("Trabajo", "Personal", "Salud", "Finanzas", "Estudio", "Ocio", "Otro")
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HabitsScreen(navController: NavHostController) {
@@ -36,11 +40,6 @@ fun HabitsScreen(navController: NavHostController) {
         topBar = {
             TopAppBar(
                 title = { Text("Hábitos") },
-                actions = {
-                    IconButton(onClick = { /* Aquí va la lógica para añadir un nuevo hábito */ }) {
-                        Icon(Icons.Default.Add, contentDescription = "Añadir Hábito")
-                    }
-                }
             )
         },
         floatingActionButton = {
@@ -186,6 +185,7 @@ fun AddEditHabitDialog(
     var frequency by remember { mutableStateOf(habit?.frequency ?: "Diario") }
     var daysOfWeek by remember { mutableStateOf(habit?.daysOfWeek ?: emptyList()) }
     var weeklyCount by remember { mutableStateOf(habit?.weeklyCount ?: 1) }
+    var selectedTag by remember { mutableStateOf(habit?.tag ?: habitTags[0]) } // Etiqueta seleccionada
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -203,6 +203,34 @@ fun AddEditHabitDialog(
                 TextField(value = title, onValueChange = { title = it }, label = { Text("Título") })
 
                 Spacer(modifier = Modifier.height(8.dp))
+                // Menú desplegable para etiquetas
+                Text("Etiqueta", style = MaterialTheme.typography.bodyLarge)
+                var expanded by remember { mutableStateOf(false) }
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = selectedTag,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { expanded = true }
+                            .background(MaterialTheme.colorScheme.surface)
+                            .padding(16.dp)
+                    )
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        habitTags.forEach { tag ->
+                            DropdownMenuItem(
+                                onClick = {
+                                    selectedTag = tag
+                                    expanded = false
+
+                                },
+                                text = { Text(text = tag)}
+                            )
+                        }
+                    }
+                }
 
                 Text("Frecuencia", style = MaterialTheme.typography.bodyLarge)
 
@@ -260,7 +288,8 @@ fun AddEditHabitDialog(
                     frequency = frequency,
                     daysOfWeek = daysOfWeek,
                     weeklyCount = weeklyCount,
-                    isCompleted = false
+                    isCompleted = false,
+                    tag = selectedTag // Guardar la etiqueta seleccionada
                 )
                 onAddHabit(newHabit)
             }) {
