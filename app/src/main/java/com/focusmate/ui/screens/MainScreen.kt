@@ -38,7 +38,7 @@ fun MainScreen() {
                 HabitsScreen(navController)
             }
             composable(BottomNavItem.Mindfulness.route) {
-                MindfulnessScreen()
+                MindfulnessScreen(navController)
             }
             composable(BottomNavItem.Chat.route) {
                 ChatScreen()
