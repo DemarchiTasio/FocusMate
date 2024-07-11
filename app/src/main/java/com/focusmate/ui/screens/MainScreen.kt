@@ -44,7 +44,7 @@ fun MainScreen() {
                 ChatScreen()
             }
             composable(BottomNavItem.Statistics.route) {
-                StatisticsScreen()
+                StatisticsScreen(navController)
             }
         }
     }
