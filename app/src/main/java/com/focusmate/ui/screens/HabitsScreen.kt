@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -21,20 +22,25 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.focusmate.data.model.Habit
+import com.focusmate.ui.viewModel.HabitViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
 val habitTags = listOf("Trabajo", "Personal", "Salud", "Finanzas", "Estudio", "Ocio", "Otro")
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HabitsScreen(navController: NavHostController) {
+fun HabitsScreen(
+    navController: NavHostController,
+    habitViewModel: HabitViewModel = hiltViewModel()
+) {
     var showDialog by remember { mutableStateOf(false) }
     var habitToEdit by remember { mutableStateOf<Habit?>(null) }
     var selectedFrequency by remember { mutableStateOf("Hoy") }
+    val habits by habitViewModel.allHabits.observeAsState(emptyList())
 
     Scaffold(
         topBar = {
@@ -59,10 +65,16 @@ fun HabitsScreen(navController: NavHostController) {
             onEditHabit = { habitToEdit = it; showDialog = true },
             habitToEdit = habitToEdit,
             selectedFrequency = selectedFrequency,
-            onFrequencyChange = { selectedFrequency = it }
+            onFrequencyChange = { selectedFrequency = it },
+            habits = habits,  // Pasar la lista de hábitos
+            onAddHabit = { habitViewModel.insert(it); showDialog = false },
+            onUpdateHabit = { habitViewModel.update(it); showDialog = false },
+            onDeleteHabit = { habitViewModel.delete(it); showDialog = false },
+            habitViewModel = habitViewModel
         )
     }
 }
+
 
 @Composable
 fun HabitsContent(
@@ -73,10 +85,14 @@ fun HabitsContent(
     onEditHabit: (Habit) -> Unit,
     habitToEdit: Habit?,
     selectedFrequency: String,
-    onFrequencyChange: (String) -> Unit
+    onFrequencyChange: (String) -> Unit,
+    habits: List<Habit>,
+    onAddHabit: (Habit) -> Unit,
+    onUpdateHabit: (Habit) -> Unit,
+    onDeleteHabit: (Habit) -> Unit,
+    habitViewModel: HabitViewModel
 ) {
     val context = LocalContext.current
-    var habits by remember { mutableStateOf(listOf<Habit>()) }
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     val currentDayOfWeek = Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
 
@@ -115,8 +131,11 @@ fun HabitsContent(
                     habit = habit,
                     onEditHabit = onEditHabit,
                     onCompleteHabit = {
-                        habits = habits.map {
-                            if (it.id == habit.id) it.copy(isCompleted = !it.isCompleted) else it
+                        onUpdateHabit(habit.copy(isCompleted = !habit.isCompleted))
+                        if (!habit.isCompleted) {
+                            habitViewModel.insertHabitCompletion(habit.id)
+                        } else {
+                            habitViewModel.removeHabitCompletion(habit.id)
                         }
                     }
                 )
@@ -126,18 +145,9 @@ fun HabitsContent(
         if (showDialog) {
             AddEditHabitDialog(
                 habit = habitToEdit,
-                onAddHabit = { habit ->
-                    habits = if (habitToEdit != null) {
-                        habits.map { if (it.id == habit.id) habit else it }
-                    } else {
-                        habits + habit
-                    }
-                    onDismiss()
-                },
-                onDeleteHabit = {
-                    habits = habits.filter { it.id != habitToEdit!!.id }
-                    onDismiss()
-                },
+                onAddHabit = onAddHabit,
+                onUpdateHabit = onUpdateHabit,
+                onDeleteHabit = onDeleteHabit,
                 onDismiss = onDismiss
             )
         }
@@ -154,9 +164,11 @@ fun HabitItem(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
-            .clickable { onCompleteHabit() }, colors = CardDefaults.cardColors(
+            .clickable { onCompleteHabit() },
+        colors = CardDefaults.cardColors(
             containerColor = if (habit.isCompleted) Color(0xFFA5D6A7) else Color.Gray
-    ) ){
+        )
+    ) {
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f).padding(16.dp)) {
                 Text(habit.title, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
@@ -178,14 +190,15 @@ fun HabitItem(
 fun AddEditHabitDialog(
     habit: Habit?,
     onAddHabit: (Habit) -> Unit,
-    onDeleteHabit: () -> Unit,
+    onUpdateHabit: (Habit) -> Unit,
+    onDeleteHabit: (Habit) -> Unit,
     onDismiss: () -> Unit
 ) {
     var title by remember { mutableStateOf(habit?.title ?: "") }
     var frequency by remember { mutableStateOf(habit?.frequency ?: "Diario") }
     var daysOfWeek by remember { mutableStateOf(habit?.daysOfWeek ?: emptyList()) }
     var weeklyCount by remember { mutableStateOf(habit?.weeklyCount ?: 1) }
-    var selectedTag by remember { mutableStateOf(habit?.tag ?: habitTags[0]) } // Etiqueta seleccionada
+    var selectedTag by remember { mutableStateOf(habit?.tag ?: habitTags[0]) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -194,7 +207,7 @@ fun AddEditHabitDialog(
             Column {
                 if (habit != null) {
                     IconButton(
-                        onClick = { onDeleteHabit() },
+                        onClick = { onDeleteHabit(habit); onDismiss() },
                         modifier = Modifier.align(Alignment.End)
                     ) {
                         Icon(Icons.Default.Delete, contentDescription = "Eliminar Hábito", tint = Color.Red)
@@ -224,9 +237,8 @@ fun AddEditHabitDialog(
                                 onClick = {
                                     selectedTag = tag
                                     expanded = false
-
                                 },
-                                text = { Text(text = tag)}
+                                text = { Text(text = tag) }
                             )
                         }
                     }
@@ -289,9 +301,14 @@ fun AddEditHabitDialog(
                     daysOfWeek = daysOfWeek,
                     weeklyCount = weeklyCount,
                     isCompleted = false,
-                    tag = selectedTag // Guardar la etiqueta seleccionada
+                    tag = selectedTag
                 )
-                onAddHabit(newHabit)
+                if (habit != null) {
+                    onUpdateHabit(newHabit)
+                } else {
+                    onAddHabit(newHabit)
+                }
+                onDismiss()
             }) {
                 Text(if (habit != null) "Actualizar" else "Agregar")
             }
@@ -303,3 +320,4 @@ fun AddEditHabitDialog(
         }
     )
 }
+

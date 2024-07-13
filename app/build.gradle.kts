@@ -1,7 +1,11 @@
+// Archivo build.gradle (Module-level)
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.jetbrains.kotlin.android)
+    id("com.android.application")
     id("kotlin-kapt")
+    id("kotlin-android")
+    id("com.google.dagger.hilt.android")
+    id("org.jetbrains.kotlin.android")
+    kotlin("kapt")
 }
 
 android {
@@ -51,6 +55,7 @@ android {
 }
 
 dependencies {
+    // Dependencias principales
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -60,26 +65,41 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
 
-    implementation("androidx.compose.ui:ui-tooling-preview:1.4.3")
-    implementation("androidx.compose.material:material:1.4.3")
-    implementation("androidx.compose.material3:material3:1.0.0-alpha12")
-    implementation("androidx.compose.material3:material3-window-size-class:1.0.0")
+    // Dependencias de Compose
+    implementation("androidx.compose.ui:ui-tooling-preview:1.6.8")
+    implementation("androidx.compose.material:material:1.6.8")
+    implementation("androidx.compose.material3:material3:1.2.1")
+    implementation("androidx.compose.material3:material3-window-size-class:1.2.1")
 
+    // Dependencias de Room
+    implementation("androidx.room:room-runtime:2.6.1")
+    implementation(libs.androidx.hilt.work)
+    kapt("androidx.room:room-compiler:2.6.1")
+    implementation("androidx.room:room-ktx:2.6.1")
 
-    // Dependencias adicionales para Room, TensorFlow Lite y ML Kit
-    implementation ("androidx.room:room-runtime:2.3.0")
-    implementation(libs.androidx.navigation.compose)
-    kapt ("androidx.room:room-compiler:2.3.0")
-    implementation ("org.tensorflow:tensorflow-lite:2.7.0")
-    implementation ("org.tensorflow:tensorflow-lite-gpu:2.7.0")
-    implementation ("com.google.mlkit:language-id:17.0.2")
-    implementation ("androidx.navigation:navigation-compose:2.4.0-alpha10")
-
-    implementation ("androidx.compose.ui:ui:1.4.3")
+    // Otras dependencias
+    implementation("androidx.navigation:navigation-compose:2.4.0-alpha10")
+    implementation("org.tensorflow:tensorflow-lite:2.7.0")
+    implementation("org.tensorflow:tensorflow-lite-gpu:2.7.0")
+    implementation("com.google.mlkit:language-id:17.0.5")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.3")
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.3")
+    implementation("androidx.compose.ui:ui:1.6.8")
     implementation("androidx.activity:activity-compose:1.4.3")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.4.1")
-    implementation ("androidx.compose.ui:ui-tooling:1.0.5")
-    implementation ("androidx.compose.runtime:runtime-livedata:1.4.3")
+    implementation("androidx.compose.ui:ui-tooling:1.6.8")
+    implementation("androidx.compose.runtime:runtime-livedata:1.6.8")
+    implementation("com.google.code.gson:gson:2.10.1")
+    implementation ("androidx.work:work-runtime-ktx:2.7.1")
+
+    // Hilt
+    implementation("com.google.dagger:hilt-android:2.48")
+    kapt("com.google.dagger:hilt-compiler:2.48")
+    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+
+    // Kotlin Coroutines
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
     // Dependencias de prueba
     testImplementation(libs.junit)
@@ -89,4 +109,20 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    implementation("androidx.core:core-ktx:1.7.0")
+    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test.ext:junit:1.1.3")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.4.0")
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.1.0")
+    implementation("androidx.appcompat:appcompat:1.4.1")
+    implementation("androidx.constraintlayout:constraintlayout:2.1.3")
+}
+
+hilt {
+    enableAggregatingTask = true
+}
+
+kapt {
+    correctErrorTypes = true
 }

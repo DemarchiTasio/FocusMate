@@ -30,14 +30,19 @@ import java.text.SimpleDateFormat
 import java.util.*
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.focusmate.ui.viewModel.EventViewModel
 
 // Agregar una lista de etiquetas
 val eventTags = listOf("Trabajo", "Personal", "Salud", "Finanzas", "Estudio", "Ocio", "Otro")
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CalendarScreen(navController: NavHostController) {
+fun CalendarScreen(
+    navController: NavHostController,
+    eventViewModel: EventViewModel = hiltViewModel()
+) {
     var showDialog by remember { mutableStateOf(false) }
     var eventToEdit by remember { mutableStateOf<Event?>(null) }
     var selectedDate by remember { mutableStateOf<Date?>(null) }
@@ -45,6 +50,7 @@ fun CalendarScreen(navController: NavHostController) {
     var currentYear by remember { mutableStateOf(Calendar.getInstance().get(Calendar.YEAR)) }
     var showNoDateEvents by remember { mutableStateOf(false) }
     var showCompleted by remember { mutableStateOf(false) }
+    val events by eventViewModel.allEvents.observeAsState(emptyList())
 
     Scaffold(
         content = { innerPadding ->
@@ -53,27 +59,37 @@ fun CalendarScreen(navController: NavHostController) {
                 showDialog = showDialog,
                 onDismiss = { showDialog = false },
                 onShowDialog = { showDialog = true },
-                onEditEvent = { eventToEdit = it; showDialog = true },
+                onEditEvent = { event ->
+                    eventToEdit = event
+                    showDialog = true
+                },
                 eventToEdit = eventToEdit,
                 selectedDate = selectedDate,
-                onDateSelected = { selectedDate = it },
+                onDateSelected = { date -> selectedDate = date },
                 currentMonth = currentMonth,
                 currentYear = currentYear,
-                onMonthChange = { month, year ->
-                    currentMonth = month
-                    currentYear = year
-                },
+                onMonthChange = { month, year -> currentMonth = month; currentYear = year },
                 showNoDateEvents = showNoDateEvents,
                 onShowNoDateEventsChange = { showNoDateEvents = it },
                 showCompleted = showCompleted,
-                onShowCompletedChange = { showCompleted = it }
+                onShowCompletedChange = { showCompleted = it },
+                events = events,
+                onAddEvent = { event ->
+                    eventViewModel.insert(event)
+                    showDialog = false
+                },
+                onUpdateEvent = { event ->
+                    eventViewModel.update(event)
+                    showDialog = false
+                },
+                eventViewModel = eventViewModel
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { eventToEdit = null; showDialog = true },
-                shape = CircleShape // Redondear el botón flotante
-            ) {
+            FloatingActionButton(onClick = {
+                eventToEdit = null
+                showDialog = true
+            }) {
                 Icon(Icons.Default.Add, contentDescription = "Add Event")
             }
         }
@@ -96,11 +112,13 @@ fun CalendarContent(
     showNoDateEvents: Boolean,
     onShowNoDateEventsChange: (Boolean) -> Unit,
     showCompleted: Boolean,
-    onShowCompletedChange: (Boolean) -> Unit
+    onShowCompletedChange: (Boolean) -> Unit,
+    events: List<Event>,
+    onAddEvent: (Event) -> Unit,
+    onUpdateEvent: (Event) -> Unit,
+    eventViewModel: EventViewModel // Añadir este parámetro
 ) {
     val context = LocalContext.current
-    var events by remember { mutableStateOf(listOf<Event>()) }
-    var completedEvents by remember { mutableStateOf(listOf<Event>()) }
     val noDateEvents = events.filter { it.date == null }
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
 
@@ -148,16 +166,18 @@ fun CalendarContent(
                     }) { event ->
                         EventItem(
                             event = event,
-                            isCompleted = false,
-                            onEditEvent = onEditEvent,
+                            isCompleted = event.isCompleted,
+                            onEditEvent = {
+                                onEditEvent(it)
+                                onShowDialog()
+                            },
                             onDeleteEvent = {
-                                events = events.filter { it.id != event.id }
+                                eventViewModel.delete(event)
                                 Toast.makeText(context, "Evento eliminado", Toast.LENGTH_SHORT).show()
                             },
                             onCompleteEvent = {
-                                events = events.filter { it.id != event.id }
-                                completedEvents = completedEvents + event
-                                Toast.makeText(context, "Evento completado", Toast.LENGTH_SHORT).show()
+                                eventViewModel.update(event.copy(isCompleted = !event.isCompleted))
+                                Toast.makeText(context, if (event.isCompleted) "Evento no completado" else "Evento completado", Toast.LENGTH_SHORT).show()
                             }
                         )
                     }
@@ -174,16 +194,18 @@ fun CalendarContent(
                     items(noDateEvents) { event ->
                         EventItem(
                             event = event,
-                            isCompleted = false,
-                            onEditEvent = onEditEvent,
+                            isCompleted = event.isCompleted,
+                            onEditEvent = {
+                                onEditEvent(it)
+                                onShowDialog()
+                            },
                             onDeleteEvent = {
-                                events = events.filter { it.id != event.id }
+                                eventViewModel.delete(event)
                                 Toast.makeText(context, "Evento eliminado", Toast.LENGTH_SHORT).show()
                             },
                             onCompleteEvent = {
-                                events = events.filter { it.id != event.id }
-                                completedEvents = completedEvents + event
-                                Toast.makeText(context, "Evento completado", Toast.LENGTH_SHORT).show()
+                                eventViewModel.update(event.copy(isCompleted = !event.isCompleted))
+                                Toast.makeText(context, if (event.isCompleted) "Evento no completado" else "Evento completado", Toast.LENGTH_SHORT).show()
                             }
                         )
                     }
@@ -197,18 +219,20 @@ fun CalendarContent(
                             Text("Completados", style = MaterialTheme.typography.bodyLarge)
                         }
                     }
-                    items(completedEvents.sortedByDescending { it.date }) { event ->
+                    items(events.filter { it.isCompleted }) { event ->
                         EventItem(
                             event = event,
                             isCompleted = true,
-                            onEditEvent = onEditEvent,
+                            onEditEvent = {
+                                onEditEvent(it)
+                                onShowDialog()
+                            },
                             onDeleteEvent = {
-                                completedEvents = completedEvents.filter { it.id != event.id }
+                                eventViewModel.delete(event)
                                 Toast.makeText(context, "Evento eliminado", Toast.LENGTH_SHORT).show()
                             },
                             onCompleteEvent = {
-                                completedEvents = completedEvents.filter { it.id != event.id }
-                                events = events + event
+                                eventViewModel.update(event.copy(isCompleted = !event.isCompleted))
                                 Toast.makeText(context, "Evento no completado", Toast.LENGTH_SHORT).show()
                             }
                         )
@@ -217,19 +241,21 @@ fun CalendarContent(
                     item {
                         Text("Todos", style = MaterialTheme.typography.bodyLarge)
                     }
-                    items(events.sortedByDescending { it.date }) { event ->
+                    items(events) { event ->
                         EventItem(
                             event = event,
-                            isCompleted = false,
-                            onEditEvent = onEditEvent,
+                            isCompleted = event.isCompleted,
+                            onEditEvent = {
+                                onEditEvent(it)
+                                onShowDialog()
+                            },
                             onDeleteEvent = {
-                                events = events.filter { it.id != event.id }
+                                eventViewModel.delete(event)
                                 Toast.makeText(context, "Evento eliminado", Toast.LENGTH_SHORT).show()
                             },
                             onCompleteEvent = {
-                                events = events.filter { it.id != event.id }
-                                completedEvents = completedEvents + event
-                                Toast.makeText(context, "Evento completado", Toast.LENGTH_SHORT).show()
+                                eventViewModel.update(event.copy(isCompleted = !event.isCompleted))
+                                Toast.makeText(context, if (event.isCompleted) "Evento no completado" else "Evento completado", Toast.LENGTH_SHORT).show()
                             }
                         )
                     }
@@ -312,25 +338,17 @@ fun CalendarContent(
             AddEventDialog(
                 event = eventToEdit,
                 onAddEvent = { event ->
-                    events = if (eventToEdit != null) {
-                        events.map { if (it.id == event.id) event else it }
-                    } else {
-                        events + event
-                    }
-                    onDismiss()
-                    Toast.makeText(
-                        context,
-                        "Evento ${if (eventToEdit != null) "actualizado" else "agregado"}",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    onAddEvent(event)
+                },
+                onUpdateEvent = { event ->
+                    onUpdateEvent(event)
                 },
                 onDismiss = onDismiss,
-                isEditable = eventToEdit?.let { !completedEvents.contains(it) } ?: true
+                isEditable = eventToEdit != null
             )
         }
     }
 }
-
 
 @Composable
 fun CalendarView(
@@ -474,7 +492,7 @@ fun EventItem(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
-            .clickable { if (!isCompleted) onEditEvent(event) }
+            .clickable { onEditEvent(event) }
     ) {
         Row(modifier = Modifier.fillMaxWidth()) {
             Box(
@@ -527,18 +545,18 @@ fun EventItem(
     }
 }
 
-// Modificaciones en AddEventDialog para incluir el menú desplegable de etiquetas
 @Composable
 fun AddEventDialog(
     event: Event? = null,
     onAddEvent: (Event) -> Unit,
+    onUpdateEvent: (Event) -> Unit,
     onDismiss: () -> Unit,
     isEditable: Boolean
 ) {
     var title by remember { mutableStateOf(event?.title ?: "") }
     var description by remember { mutableStateOf(event?.description ?: "") }
-    var date by remember { mutableStateOf(event?.date) }
-    var selectedTag by remember { mutableStateOf(event?.tag ?: eventTags[0]) } // Etiqueta seleccionada
+    var date by remember { mutableStateOf(event?.date ?: Date()) }
+    var selectedTag by remember { mutableStateOf(event?.tag ?: eventTags[0]) }
     val context = LocalContext.current
 
     val calendar = Calendar.getInstance()
@@ -564,27 +582,20 @@ fun AddEventDialog(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Seleccionar Fecha", style = MaterialTheme.typography.bodyLarge)
-                    IconButton(onClick = { if (isEditable) datePickerDialog.show() }) {
+                    IconButton(onClick = { datePickerDialog.show() }) {
                         Icon(Icons.Default.DateRange, contentDescription = "Seleccionar Fecha")
                     }
                 }
-                if (date != null) {
-                    Text(
-                        "Fecha seleccionada: ${
-                            SimpleDateFormat(
-                                "dd/MM/yyyy",
-                                Locale.getDefault()
-                            ).format(date)
-                        }", style = MaterialTheme.typography.bodyMedium
-                    )
-                }
+                Text(
+                    text = "Fecha seleccionada: ${SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(date)}",
+                    style = MaterialTheme.typography.bodyMedium
+                )
                 Spacer(modifier = Modifier.height(8.dp))
                 TextField(
                     value = title,
                     onValueChange = { title = it },
                     label = { Text("Título") },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = isEditable
+                    modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 TextField(
@@ -593,12 +604,9 @@ fun AddEventDialog(
                     label = { Text("Descripción") },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(120.dp),
-                    enabled = isEditable
+                        .height(120.dp)
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-
-                // Menú desplegable para etiquetas
                 Text("Etiqueta", style = MaterialTheme.typography.bodyLarge)
                 var expanded by remember { mutableStateOf(false) }
                 Box(modifier = Modifier.fillMaxWidth()) {
@@ -616,26 +624,33 @@ fun AddEventDialog(
                     ) {
                         eventTags.forEach { tag ->
                             DropdownMenuItem(onClick = {
-                                    selectedTag = tag
-                                    expanded = false
-                                },
-                                text = { Text(text = tag) })
+                                selectedTag = tag
+                                expanded = false
+                            }, text = { Text(text = tag) })
                         }
                     }
                 }
             }
         },
         confirmButton = {
-            Button(onClick = {
-                val newEvent = Event(
-                    id = event?.id ?: UUID.randomUUID().hashCode(),
-                    title = title,
-                    description = description,
-                    date = date,
-                    tag = selectedTag // Guardar la etiqueta seleccionada
-                )
-                onAddEvent(newEvent)
-            }, enabled = isEditable) {
+            Button(
+                onClick = {
+                    val newEvent = Event(
+                        id = event?.id ?: UUID.randomUUID().hashCode(),
+                        title = title,
+                        description = description,
+                        date = date,
+                        tag = selectedTag,
+                        isCompleted = event?.isCompleted ?: false
+                    )
+                    if (event != null) {
+                        onUpdateEvent(newEvent)
+                    } else {
+                        onAddEvent(newEvent)
+                    }
+                },
+                enabled = title.isNotBlank() && description.isNotBlank()
+            ) {
                 Text(if (event != null) "Actualizar" else "Agregar")
             }
         },
