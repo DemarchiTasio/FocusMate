@@ -1,5 +1,6 @@
 package com.focusmate.data.local
 
+import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
@@ -42,4 +43,13 @@ interface HabitCompletionDao {
 
     @Query("DELETE FROM habit_completions WHERE habitId = :habitId")
     suspend fun deleteByHabitId(habitId: Int)
+
+    @Query("SELECT * FROM habit_completions")
+    fun getAllHabitCompletions(): LiveData<List<HabitCompletion>>
+
+    @Query("SELECT COUNT(*) FROM habit_completions")
+    fun getTotalHabitsCompleted(): LiveData<Int>
+
+    @Query("SELECT COUNT(*) FROM events WHERE isCompleted = 1")
+    fun getTotalEventsCompleted(): LiveData<Int>
 }

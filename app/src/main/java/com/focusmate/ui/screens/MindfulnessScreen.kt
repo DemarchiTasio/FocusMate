@@ -42,7 +42,12 @@ fun MindfulnessScreen(navController: NavHostController) {
             listOf(
                 Meditation(id = 1, title = "Meditación de la mañana", duration = "10 min", audioResId = R.raw.meditacion, imageResId = R.drawable.placeholder),
                 Meditation(id = 2, title = "Meditación para la concentración", duration = "15 min", audioResId = R.raw.meditacion, imageResId = R.drawable.placeholder),
-                Meditation(id = 3, title = "Meditación de la noche", duration = "20 min", audioResId = R.raw.meditacion, imageResId = R.drawable.placeholder)
+                Meditation(id = 3, title = "Meditación de la noche", duration = "20 min", audioResId = R.raw.meditacion, imageResId = R.drawable.placeholder),
+                Meditation(id = 4, title = "Meditación de la noche", duration = "20 min", audioResId = R.raw.meditacion, imageResId = R.drawable.placeholder),
+                Meditation(id = 5, title = "Meditación de la noche", duration = "20 min", audioResId = R.raw.meditacion, imageResId = R.drawable.placeholder),
+                Meditation(id = 6, title = "Meditación de la noche", duration = "20 min", audioResId = R.raw.meditacion, imageResId = R.drawable.placeholder),
+                Meditation(id = 7, title = "Meditación de la noche", duration = "20 min", audioResId = R.raw.meditacion, imageResId = R.drawable.placeholder),
+                Meditation(id = 8, title = "Meditación de la noche", duration = "20 min", audioResId = R.raw.meditacion, imageResId = R.drawable.placeholder)
             )
         )
     }
@@ -92,7 +97,7 @@ fun MindfulnessScreen(navController: NavHostController) {
                 Spacer(modifier = Modifier.height(8.dp))
 
                 if (selectedCategory == "Respiración") {
-                    LazyColumn {
+                    LazyColumn(modifier = Modifier.height(400.dp)) {
                         items(breathingExercises) { exercise ->
                             BreathingExerciseItem(
                                 exercise = exercise,
@@ -111,7 +116,7 @@ fun MindfulnessScreen(navController: NavHostController) {
                         }
                     }
                 } else {
-                    LazyColumn {
+                    LazyColumn(modifier = Modifier.height(400.dp)) {
                         items(meditations) { meditation ->
                             MeditationItem(
                                 meditation = meditation,
@@ -184,8 +189,10 @@ fun MeditationItem(
             }
             IconButton(onClick = { onPlayPauseClick() }) {
                 Icon(
-                    if (isPlaying) Icons.Default.Refresh else Icons.Default.PlayArrow,
-                    contentDescription = if (isPlaying) "Pause" else "Play"
+
+                            painterResource(R.drawable.play),
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp)
                 )
             }
         }
@@ -217,8 +224,10 @@ fun BreathingExerciseItem(
             }
             IconButton(onClick = { onPlayPauseClick() }) {
                 Icon(
-                    if (isPlaying) Icons.Default.Refresh else Icons.Default.PlayArrow,
-                    contentDescription = if (isPlaying) "Pause" else "Play"
+
+                    painterResource(R.drawable.play),
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp)
                 )
             }
         }
@@ -288,7 +297,12 @@ fun AudioPlayer(
                 IconButton(onClick = {
                     mediaPlayer?.seekTo((mediaPlayer?.currentPosition ?: 0) - 10000)
                 }) {
-                    Icon(Icons.Default.Refresh, contentDescription = "Rewind 10 seconds")
+                    Icon(
+
+                        painterResource(R.drawable.backward10),
+                        contentDescription = null,
+                        modifier = Modifier.size(32.dp)
+                    )
                 }
                 IconButton(onClick = {
                     if (isPlaying) {
@@ -298,15 +312,28 @@ fun AudioPlayer(
                     }
                     onPlayPauseClick()
                 }) {
-                    Icon(
-                        if (isPlaying) Icons.Default.Close else Icons.Default.PlayArrow,
-                        contentDescription = if (isPlaying) "Pause" else "Play"
-                    )
+                    if (isPlaying){
+                        Icon(
+                            painterResource(R.drawable.pause),
+                            contentDescription = null,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }else{
+                        Icon(
+                            painterResource(R.drawable.play),
+                            contentDescription = null,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
                 }
                 IconButton(onClick = {
                     mediaPlayer?.seekTo((mediaPlayer?.currentPosition ?: 0) + 10000)
                 }) {
-                    Icon(Icons.Default.KeyboardArrowRight, contentDescription = "Forward 10 seconds")
+                    Icon(
+                        painterResource(R.drawable.plus),
+                        contentDescription = null,
+                        modifier = Modifier.size(32.dp)
+                    )
                 }
             }
             Text(

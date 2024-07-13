@@ -117,6 +117,9 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.1.0")
     implementation("androidx.appcompat:appcompat:1.4.1")
     implementation("androidx.constraintlayout:constraintlayout:2.1.3")
+
+    // Graficas
+//    implementation (libs.charts
 }
 
 hilt {

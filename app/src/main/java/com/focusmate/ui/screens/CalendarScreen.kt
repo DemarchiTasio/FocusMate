@@ -31,7 +31,9 @@ import java.util.*
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.res.painterResource
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.focusmate.R
 import com.focusmate.ui.viewModel.EventViewModel
 
 // Agregar una lista de etiquetas
@@ -89,8 +91,13 @@ fun CalendarScreen(
             FloatingActionButton(onClick = {
                 eventToEdit = null
                 showDialog = true
-            }) {
-                Icon(Icons.Default.Add, contentDescription = "Add Event")
+            },
+                shape = CircleShape) {
+                Icon(
+                    painterResource(R.drawable.plus),
+                    contentDescription = null,
+                    modifier = Modifier.size(32.dp)
+                )
             }
         }
     )
@@ -181,34 +188,34 @@ fun CalendarContent(
                             }
                         )
                     }
-                } else if (showNoDateEvents) {
-                    item {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text("Sin fecha", style = MaterialTheme.typography.bodyLarge)
-                        }
-                    }
-                    items(noDateEvents) { event ->
-                        EventItem(
-                            event = event,
-                            isCompleted = event.isCompleted,
-                            onEditEvent = {
-                                onEditEvent(it)
-                                onShowDialog()
-                            },
-                            onDeleteEvent = {
-                                eventViewModel.delete(event)
-                                Toast.makeText(context, "Evento eliminado", Toast.LENGTH_SHORT).show()
-                            },
-                            onCompleteEvent = {
-                                eventViewModel.update(event.copy(isCompleted = !event.isCompleted))
-                                Toast.makeText(context, if (event.isCompleted) "Evento no completado" else "Evento completado", Toast.LENGTH_SHORT).show()
-                            }
-                        )
-                    }
+//                } else if (showNoDateEvents) {
+//                    item {
+//                        Row(
+//                            verticalAlignment = Alignment.CenterVertically,
+//                            horizontalArrangement = Arrangement.SpaceBetween,
+//                            modifier = Modifier.fillMaxWidth()
+//                        ) {
+//                            Text("Sin fecha", style = MaterialTheme.typography.bodyLarge)
+//                        }
+//                    }
+//                    items(noDateEvents) { event ->
+//                        EventItem(
+//                            event = event,
+//                            isCompleted = event.isCompleted,
+//                            onEditEvent = {
+//                                onEditEvent(it)
+//                                onShowDialog()
+//                            },
+//                            onDeleteEvent = {
+//                                eventViewModel.delete(event)
+//                                Toast.makeText(context, "Evento eliminado", Toast.LENGTH_SHORT).show()
+//                            },
+//                            onCompleteEvent = {
+//                                eventViewModel.update(event.copy(isCompleted = !event.isCompleted))
+//                                Toast.makeText(context, if (event.isCompleted) "Evento no completado" else "Evento completado", Toast.LENGTH_SHORT).show()
+//                            }
+//                        )
+//                    }
                 } else if (showCompleted) {
                     item {
                         Row(
@@ -266,17 +273,17 @@ fun CalendarContent(
         // Column for fixed titles at the bottom
         Column {
             if (selectedDate == null && !showNoDateEvents && !showCompleted) {
-                Text(
-                    text = "Sin fecha",
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            onShowNoDateEventsChange(true)
-                            onShowCompletedChange(false)
-                        }
-                        .padding(vertical = 8.dp)
-                )
+//                Text(
+//                    text = "Sin fecha",
+//                    style = MaterialTheme.typography.bodyLarge,
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .clickable {
+//                            onShowNoDateEventsChange(true)
+//                            onShowCompletedChange(false)
+//                        }
+//                        .padding(vertical = 8.dp)
+//                )
                 Text(
                     text = "Completados",
                     style = MaterialTheme.typography.bodyLarge,
@@ -303,20 +310,20 @@ fun CalendarContent(
                             .padding(vertical = 8.dp)
                     )
                 }
-                if (showCompleted || selectedDate != null) {
-                    Text(
-                        text = "Sin fecha",
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                onShowNoDateEventsChange(true)
-                                onShowCompletedChange(false)
-                                onDateSelected(null)
-                            }
-                            .padding(vertical = 8.dp)
-                    )
-                }
+//                if (showCompleted || selectedDate != null) {
+//                    Text(
+//                        text = "Sin fecha",
+//                        style = MaterialTheme.typography.bodyLarge,
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .clickable {
+//                                onShowNoDateEventsChange(true)
+//                                onShowCompletedChange(false)
+//                                onDateSelected(null)
+//                            }
+//                            .padding(vertical = 8.dp)
+//                    )
+//                }
                 if (showNoDateEvents || selectedDate != null) {
                     Text(
                         text = "Completados",

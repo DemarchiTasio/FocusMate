@@ -1,5 +1,6 @@
 package com.focusmate.data.repository
 
+import androidx.lifecycle.LiveData
 import com.focusmate.data.local.HabitDao
 import com.focusmate.data.local.HabitCompletionDao
 import com.focusmate.data.model.Event
@@ -55,4 +56,20 @@ class HabitCompletionRepository @Inject constructor(
     suspend fun deleteByHabitId(habitId: Int) {
         habitCompletionDao.deleteByHabitId(habitId)
     }
+    fun getAllHabitCompletions(): LiveData<List<HabitCompletion>> {
+        return habitCompletionDao.getAllHabitCompletions()
+    }
+
+    fun getTotalHabitsCompleted(): LiveData<Int> {
+        return habitCompletionDao.getTotalHabitsCompleted()
+    }
+
+    fun getTotalEventsCompleted(): LiveData<Int> {
+        return habitCompletionDao.getTotalEventsCompleted()
+    }
+
+    suspend fun insert(habitCompletion: HabitCompletion) {
+        habitCompletionDao.insertHabitCompletion(habitCompletion)
+    }
+
 }
