@@ -1,5 +1,6 @@
 package com.focusmate.ui.screens
 
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.BottomNavigation
@@ -10,7 +11,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.activity.viewModels
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -18,11 +19,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.focusmate.ui.viewModel.ChatViewModel
 import com.focusmate.ui.viewModel.EventViewModel
 
 
 @Composable
 fun MainScreen(eventViewModel: EventViewModel = hiltViewModel()) {
+
     val navController = rememberNavController()
     Scaffold(
         bottomBar = {

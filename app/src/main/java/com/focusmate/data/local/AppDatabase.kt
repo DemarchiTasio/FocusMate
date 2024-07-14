@@ -9,7 +9,7 @@ import com.focusmate.data.model.Event
 import com.focusmate.data.model.Habit
 import com.focusmate.data.model.HabitCompletion
 
-@Database(entities = [Event::class, Habit::class, HabitCompletion::class], version = 2, exportSchema = false)
+@Database(entities = [Event::class, Habit::class, HabitCompletion::class], version = 3, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun eventDao(): EventDao

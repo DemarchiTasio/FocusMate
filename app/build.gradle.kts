@@ -54,6 +54,7 @@ android {
     }
 }
 
+
 dependencies {
     // Dependencias principales
     implementation(libs.androidx.core.ktx)
@@ -74,6 +75,7 @@ dependencies {
     // Dependencias de Room
     implementation("androidx.room:room-runtime:2.6.1")
     implementation(libs.androidx.hilt.work)
+    implementation(libs.firebase.dataconnect)
     kapt("androidx.room:room-compiler:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
 
@@ -118,8 +120,14 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.4.1")
     implementation("androidx.constraintlayout:constraintlayout:2.1.3")
 
-    // Graficas
-//    implementation (libs.charts
+   //dependencia chat
+    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation ("com.squareup.okhttp3:okhttp:4.9.1")
+    implementation ("com.squareup.okhttp3:logging-interceptor:4.9.1")
+
+    // Google AI Client SDK
+    implementation ("com.google.ai.client.generativeai:generativeai:0.7.0")
 }
 
 hilt {

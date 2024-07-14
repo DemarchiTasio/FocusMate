@@ -244,18 +244,18 @@ fun AddEditHabitDialog(
                     }
                 }
 
-                Text("Frecuencia", style = MaterialTheme.typography.bodyLarge)
+//                Text("Frecuencia", style = MaterialTheme.typography.bodyLarge)
 
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                    listOf("Diario", "Semanal").forEach { freq ->
-                        Text(
-                            text = freq,
-                            modifier = Modifier.clickable { frequency = freq },
-                            fontWeight = if (frequency == freq) FontWeight.Bold else FontWeight.Normal,
-                            color = if (frequency == freq) Color.Magenta else Color.White
-                        )
-                    }
-                }
+//                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+//                    listOf("Diario", "Semanal").forEach { freq ->
+//                        Text(
+//                            text = freq,
+//                            modifier = Modifier.clickable { frequency = freq },
+//                            fontWeight = if (frequency == freq) FontWeight.Bold else FontWeight.Normal,
+//                            color = if (frequency == freq) Color.Magenta else Color.White
+//                        )
+//                    }
+//                }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -279,16 +279,16 @@ fun AddEditHabitDialog(
                             }
                         }
                     }
-                    "Semanal" -> {
-                        Text("Número de días a la semana", style = MaterialTheme.typography.bodyLarge)
-                        Slider(
-                            value = weeklyCount.toFloat(),
-                            onValueChange = { weeklyCount = it.toInt() },
-                            valueRange = 1f..7f,
-                            steps = 6
-                        )
-                        Text("$weeklyCount días a la semana", style = MaterialTheme.typography.bodyLarge)
-                    }
+//                    "Semanal" -> {
+//                        Text("Número de días a la semana", style = MaterialTheme.typography.bodyLarge)
+//                        Slider(
+//                            value = weeklyCount.toFloat(),
+//                            onValueChange = { weeklyCount = it.toInt() },
+//                            valueRange = 1f..7f,
+//                            steps = 6
+//                        )
+//                        Text("$weeklyCount días a la semana", style = MaterialTheme.typography.bodyLarge)
+//                    }
                 }
             }
         },

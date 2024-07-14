@@ -97,7 +97,7 @@ fun MindfulnessScreen(navController: NavHostController) {
                 Spacer(modifier = Modifier.height(8.dp))
 
                 if (selectedCategory == "Respiración") {
-                    LazyColumn(modifier = Modifier.height(400.dp)) {
+                    LazyColumn(modifier = Modifier.height(300.dp)) {
                         items(breathingExercises) { exercise ->
                             BreathingExerciseItem(
                                 exercise = exercise,
@@ -116,7 +116,7 @@ fun MindfulnessScreen(navController: NavHostController) {
                         }
                     }
                 } else {
-                    LazyColumn(modifier = Modifier.height(400.dp)) {
+                    LazyColumn(modifier = Modifier.height(300.dp)) {
                         items(meditations) { meditation ->
                             MeditationItem(
                                 meditation = meditation,
@@ -330,7 +330,7 @@ fun AudioPlayer(
                     mediaPlayer?.seekTo((mediaPlayer?.currentPosition ?: 0) + 10000)
                 }) {
                     Icon(
-                        painterResource(R.drawable.plus),
+                        painterResource(R.drawable.forward10),
                         contentDescription = null,
                         modifier = Modifier.size(32.dp)
                     )
